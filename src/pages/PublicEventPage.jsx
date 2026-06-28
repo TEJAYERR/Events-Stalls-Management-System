@@ -42,9 +42,28 @@ export default function PublicEventPage({ eventId }) {
 
   const startBooking = async (form) => {
     setBookingStep("paying");
+
+    // We'll assign this after Razorpay checkout is created.
+    let rzp;
+
+    const safeFail = (message) => {
+      setBookingStep("idle");
+      setShowInvoice(false);
+      setRazorpayResponse(null);
+      setBookingData(null);
+      setConfirmedBooking(null);
+
+      try {
+        rzp?.close?.();
+      } catch (_) {}
+
+      if (message) alert(message);
+    };
+
     try {
       const res = await api.bookStall(event.id, selectedStall.id, form);
       setBookingData(res);
+
       // Load Razorpay
       if (!window.Razorpay) {
         await new Promise((resolve, reject) => {
@@ -55,7 +74,8 @@ export default function PublicEventPage({ eventId }) {
           document.head.appendChild(s);
         });
       }
-      const rzp = new window.Razorpay({
+
+      rzp = new window.Razorpay({
         key: res.razorpayKey,
         amount: Number(res.amount) * 100,
         currency: "INR",
@@ -72,24 +92,34 @@ export default function PublicEventPage({ eventId }) {
               razorpayPaymentId: response.razorpay_payment_id,
               razorpaySignature: response.razorpay_signature,
             });
+
             setRazorpayResponse(response);
             setConfirmedBooking({ ...res, razorpayOrderId: response.razorpay_order_id });
             setBookingStep("confirmed");
             setShowInvoice(true);
             api.getPublicEvent(eventId).then(setEvent);
-          } catch {
-            setBookingStep("form");
+          } catch (err) {
+            safeFail(err?.message || "Payment verification failed. Please try again.");
           }
         },
         modal: {
           ondismiss: () => {
-            setBookingStep("idle");
+            safeFail("Payment cancelled or closed.");
           },
         },
       });
+
+      // Some Razorpay failures don't hit `handler` — listen explicitly.
+      try {
+        rzp.on?.("payment.failed", (resp) => {
+          const msg = resp?.error?.description || "Payment failed. Please try again.";
+          safeFail(msg);
+        });
+      } catch (_) {}
+
       rzp.open();
     } catch (err) {
-      setBookingStep("form");
+      safeFail(err?.message || "Booking/payment failed. Please try again.");
     }
   };
 
