@@ -111,8 +111,24 @@ export default function Events({ token, showToast }) {
             justifyContent: isPhone ? "space-between" : "flex-start"
           };
 
+          const isClosed = status === "closed";
+
           return (
-            <div key={event.id} style={responsiveCardStyle}>
+            <div
+              key={event.id}
+              style={{
+                ...responsiveCardStyle,
+                ...(isClosed
+                  ? {
+                      filter: "grayscale(100%)",
+                      opacity: 0.55,
+                      cursor: "default",
+                      pointerEvents: "auto",
+                      border: "1px solid #e5e5e5",
+                    }
+                  : null),
+              }}
+            >
               <img
                 src={api.getBlueprintUrl(event.id)}
                 alt={event.name}
@@ -121,8 +137,26 @@ export default function Events({ token, showToast }) {
               />
               <div style={{ ...S.eventBody, padding: isPhone ? "16px" : S.eventBody?.padding || "20px 24px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                  <div style={{ fontWeight: 700, fontSize: isPhone ? "16px" : "18px" }}>{event.name}</div>
-                  <span style={{ ...S.badge(status === "active" ? "purple" : ""), fontSize: 10 }}>{status}</span>
+                  <div
+                    style={{
+                      fontWeight: 700,
+                      fontSize: isPhone ? "16px" : "18px",
+                      ...(status === "closed" ? { color: "#8a8a8a" } : null),
+                    }}
+                  >
+                    {event.name}
+                  </div>
+                  <span
+                    style={{
+                      ...S.badge(status === "active" ? "purple" : ""),
+                      fontSize: 10,
+                      ...(status === "closed"
+                        ? { background: "#f1f3f5", color: "#555" }
+                        : null),
+                    }}
+                  >
+                    {status === "closed" ? "EVENT CLOSED" : status}
+                  </span>
                 </div>
                 {event.description && (
                   <p style={{ fontSize: 13, color: "#666", marginBottom: 10, lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
@@ -153,9 +187,38 @@ export default function Events({ token, showToast }) {
                   </div>
 
                   <div style={responsiveActionButtonsGroup}>
-                    <button style={{ ...S.btnSm("secondary"), flex: isPhone ? 1 : "none", justifyCenter: "center" }} onClick={() => window.open(`/event/${event.id}`, "_blank")}>↗ Preview</button>
-                    <button style={{ ...S.btnSm(), flex: isPhone ? 1 : "none", justifyCenter: "center" }} onClick={() => setSelectedId(event.id)}>✏️ Manage</button>
-                    <button style={{ ...S.btnSm("danger"), flex: isPhone ? "none" : "none" }} onClick={(e) => deleteEvent(event.id, e)}>🗑️</button>
+                    <button
+                      style={{
+                        ...S.btnSm("secondary"),
+                        flex: isPhone ? 1 : "none",
+                        justifyCenter: "center",
+                        ...(isClosed ? { opacity: 0.6, filter: "grayscale(100%)" } : null),
+                      }}
+                      onClick={() => window.open(`/event/${event.id}`, "_blank")}
+                    >
+                      ↗ Preview
+                    </button>
+                    <button
+                      style={{
+                        ...S.btnSm(),
+                        flex: isPhone ? 1 : "none",
+                        justifyCenter: "center",
+                        ...(isClosed ? { opacity: 0.6, filter: "grayscale(100%)" } : null),
+                      }}
+                      onClick={() => setSelectedId(event.id)}
+                    >
+                      ✏️ Manage
+                    </button>
+                    <button
+                      style={{
+                        ...S.btnSm("danger"),
+                        flex: isPhone ? "none" : "none",
+                        ...(isClosed ? { opacity: 0.6, filter: "grayscale(100%)" } : null),
+                      }}
+                      onClick={(e) => deleteEvent(event.id, e)}
+                    >
+                      🗑️
+                    </button>
                   </div>
                 </div>
               </div>

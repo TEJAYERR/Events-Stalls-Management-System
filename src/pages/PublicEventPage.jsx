@@ -110,6 +110,8 @@ export default function PublicEventPage({ eventId }) {
   const booked = event.stalls?.filter((s) => s.stallStatus === "BOOKED").length || 0;
   const total = event.stalls?.length || 0;
   const status = getEventStatus(event);
+  const isEventClosed = status === "closed";
+
 
   const isUnder600 = screenWidth < 600;
 
@@ -134,9 +136,25 @@ export default function PublicEventPage({ eventId }) {
       {/* Header */}
       <div style={{ background: "#0f0f1a", color: "#fff", padding: isUnder600 ? "32px 20px" : "40px 32px", boxSizing: "border-box" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          <span style={{ background: status === "active" ? "#2ecc71" : "#888", color: "#fff", padding: "4px 14px", borderRadius: 20, fontSize: 12, fontWeight: 700, marginBottom: 16, display: "inline-block" }}>
-            {status === "active" ? "Open for Booking" : status === "upcoming" ? "Coming Soon" : "Closed"}
+          <span
+            style={{
+              background: status === "open" ? "#2ecc71" : "#888",
+              color: "#fff",
+              padding: "4px 14px",
+              borderRadius: 20,
+              fontSize: 12,
+              fontWeight: 700,
+              marginBottom: 16,
+              display: "inline-block",
+            }}
+          >
+            {status === "open" ? "OPEN" : "EVENT CLOSED"}
           </span>
+          {isEventClosed && (
+            <div style={{ color: "#bdbdbd", fontSize: 13, fontWeight: 600, marginBottom: 12 }}>
+              Event is closed — stalls are not bookable.
+            </div>
+          )}
           <h1 style={{ fontSize: isUnder600 ? "24px" : "32px", fontWeight: 800, marginBottom: 12, lineHeight: 1.2 }}>{event.name}</h1>
           {event.description && <p style={{ fontSize: 15, color: "#aaa", lineHeight: 1.6, marginBottom: 20, maxWidth: 600, wordBreak: "break-word" }}>{event.description}</p>}
           
@@ -205,15 +223,72 @@ export default function PublicEventPage({ eventId }) {
                   return String(a?.stallNumber || "").localeCompare(String(b?.stallNumber || ""));
                 })
                 .map((stall) => (
-                  <div key={stall.id} style={{ ...S.stallCard(stall.stallType, stall.stallStatus), userSelect: "none", padding: isUnder600 ? "10px" : "14px" }} onClick={() => openStall(stall)}>
+                  <div
+                    key={stall.id}
+                    style={{
+                      ...S.stallCard(stall.stallType, stall.stallStatus),
+                      userSelect: "none",
+                      padding: isUnder600 ? "10px" : "14px",
+                      ...(isEventClosed
+                        ? {
+                            filter: "grayscale(100%)",
+                            opacity: 0.55,
+                            cursor: "pointer",
+                          }
+                        : null),
+                    }}
+                    onClick={() => openStall(stall)}
+                  >
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <div style={{ fontWeight: 700, fontSize: 14 }}>{stall.stallNumber}</div>
                       {stall.stallType === "PREMIUM" && <span>👑</span>}
                     </div>
-                    <div style={{ fontSize: isUnder600 ? "12px" : "13px", fontWeight: 600, margin: "6px 0" }}>{formatCurrency(stall.price)}</div>
-                    <span style={S.badge(stall.stallStatus === "BOOKED" ? "red" : "green")}>{stall.stallStatus === "BOOKED" ? "Booked" : "Available"}</span>
+                    <div
+                      style={{
+                        fontSize: isUnder600 ? "12px" : "13px",
+                        fontWeight: 600,
+                        margin: "6px 0",
+                        ...(isEventClosed ? { color: "#8a8a8a" } : null),
+                      }}
+                    >
+                      {formatCurrency(stall.price)}
+                    </div>
+
+                    <span
+                      style={
+                        isEventClosed
+                          ? {
+                              display: "inline-block",
+                              padding: "3px 10px",
+                              borderRadius: 20,
+                              fontSize: 11,
+                              fontWeight: 700,
+                              background: "#f1f3f5",
+                              color: "#555",
+                            }
+                          : S.badge(stall.stallStatus === "BOOKED" ? "red" : "green")
+                      }
+                    >
+                      {stall.stallStatus === "BOOKED"
+                        ? isEventClosed
+                          ? "⬜ Booked"
+                          : "Booked"
+                        : isEventClosed
+                          ? "⬜ Available"
+                          : "Available"}
+                    </span>
+
                     {stall.stallStatus === "BOOKED" && stall.category && (
-                      <div style={{ fontSize: 11, color: "#888", marginTop: 6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <div
+                        style={{
+                          fontSize: 11,
+                          color: isEventClosed ? "#a0a0a0" : "#888",
+                          marginTop: 6,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
                         {stall.category}
                       </div>
                     )}
