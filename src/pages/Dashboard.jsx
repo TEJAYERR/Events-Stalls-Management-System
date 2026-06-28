@@ -79,7 +79,7 @@ export default function Dashboard({ token, setPage }) {
             </span>
           </div>
           {events
-            .filter((e) => ["active", "upcoming"].includes(getEventStatus(e)))
+            .filter((e) => getEventStatus(e) === "open")
             .slice(0, 4)
             .map((e) => {
               const booked = e.stalls?.filter((s) => s.stallStatus === "BOOKED").length || 0;
@@ -93,7 +93,8 @@ export default function Dashboard({ token, setPage }) {
                     <div style={{ fontSize: 12, color: "#888" }}>{formatDate(e.startDate)}</div>
                   </div>
                   <div style={{ textAlign: "right", flexShrink: 0 }}>
-                    <span style={{ ...S.badge(status === "active" ? "purple" : ""), fontSize: 10 }}>{status}</span>
+                    <span style={{ ...S.badge(status === "open" ? "purple" : ""), fontSize: 10 }}>{status}</span>
+
                     <div style={{ fontSize: 12, color: "#888", marginTop: 4 }}>
                       {booked}/{total} booked ({pct}%)
                     </div>
@@ -112,7 +113,14 @@ export default function Dashboard({ token, setPage }) {
               View all
             </span>
           </div>
-          {bookings.slice(0, 5).map((b) => (
+          {([...bookings].sort((a, c) => {
+            const at = a?.createdAt ? new Date(a.createdAt).getTime() : null;
+            const bt = c?.createdAt ? new Date(c.createdAt).getTime() : null;
+            if (at == null && bt == null) return 0;
+            if (at == null) return 1;
+            if (bt == null) return -1;
+            return bt - at;
+          })).slice(0, 5).map((b) => (
             <div key={b.bookingId} style={{ padding: "12px 0", borderBottom: "1px solid #f5f5f5", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{ fontWeight: 600, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b.vendorName}</div>

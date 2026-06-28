@@ -1,7 +1,7 @@
 // ─── CONFIG ────────────────────────────────────────────────────────────────
 // TODO: move to an env var (e.g. import.meta.env.VITE_API_BASE_URL) once you
 // wire this up to your build tool, instead of hardcoding localhost.
-export const BASE_URL = "https://esm-backend-1k9u.onrender.com";
+export const BASE_URL = "http://localhost:8080";
 
 // ─── API ───────────────────────────────────────────────────────────────────
 // Single low-level request helper + one named method per backend endpoint.
@@ -37,6 +37,23 @@ export const api = {
 
   // Events
   getEvents: (token) => api.request("GET", "/admin/events", null, token),
+  updateEventStatus: async (eventId, eventStatus, token) => {
+    const res = await fetch(`${BASE_URL}/admin/events/${eventId}/status`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        eventStatus,
+      }),
+    });
+
+    if (!res.ok) throw new Error("Failed to update event status");
+
+    return await res.json();
+  },
+
   // Admin-authenticated single-event fetch — now a dedicated admin endpoint,
   // separate from the public one below (was reusing /events/{id} before).
   getEvent: (id, token) => api.request("GET", `/admin/events/${id}`, null, token),

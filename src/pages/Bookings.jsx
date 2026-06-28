@@ -60,10 +60,23 @@ export default function Bookings({ token, showToast }) {
     marginBottom: 20
   };
 
+  const sortedBookings = [...bookings].sort((a, b) => {
+    const at = a?.createdAt ? new Date(a.createdAt).getTime() : null;
+    const bt = b?.createdAt ? new Date(b.createdAt).getTime() : null;
+
+    // Put entries with valid dates first (newest -> oldest). Missing/invalid dates go last.
+    if (at == null && bt == null) return 0;
+    if (at == null) return 1;
+    if (bt == null) return -1;
+    return bt - at;
+  });
+
+
   return (
     <div style={{ width: "100%", boxSizing: "border-box" }}>
       <div style={S.pageBreadcrumb}>Bookings</div>
       <div style={{ ...S.pageTitle, fontSize: isPhone ? "22px" : S.pageTitle?.fontSize || "28px" }}>Bookings</div>
+
 
       {/* STATUS BADGE FILTERS - Auto wraps cleanly onto next line if buttons overflow */}
       <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
@@ -100,7 +113,7 @@ export default function Bookings({ token, showToast }) {
                 </tr>
               </thead>
               <tbody>
-                {bookings.map((b) => (
+                {sortedBookings.map((b) => (
                   <tr
                     key={b.bookingId}
                     style={{ cursor: "pointer" }}
@@ -122,8 +135,9 @@ export default function Bookings({ token, showToast }) {
                     </td>
                   </tr>
                 ))}
-                {bookings.length === 0 && (
-                  <tr><td colSpan={8} style={{ ...S.td, textAlign: "center", padding: 40, color: "#888" }}>No {status.toLowerCase()} bookings found</td></tr>
+                {sortedBookings.length === 0 && (
+                   <tr><td colSpan={8} style={{ ...S.td, textAlign: "center", padding: 40, color: "#888" }}>No {status.toLowerCase()} bookings found</td></tr>
+
                 )}
               </tbody>
             </table>
