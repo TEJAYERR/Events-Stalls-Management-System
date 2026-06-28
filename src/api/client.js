@@ -37,6 +37,23 @@ export const api = {
 
   // Events
   getEvents: (token) => api.request("GET", "/admin/events", null, token),
+  updateEventStatus: async (eventId, eventStatus, token) => {
+    const res = await fetch(`${BASE_URL}/admin/events/${eventId}/status`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        eventStatus,
+      }),
+    });
+
+    if (!res.ok) throw new Error("Failed to update event status");
+
+    return await res.json();
+  },
+
   // Admin-authenticated single-event fetch — now a dedicated admin endpoint,
   // separate from the public one below (was reusing /events/{id} before).
   getEvent: (id, token) => api.request("GET", `/admin/events/${id}`, null, token),

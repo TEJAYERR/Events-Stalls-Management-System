@@ -37,6 +37,35 @@ export default function Events({ token, showToast }) {
     }
   };
 
+  const toggleEventStatus = async (event, e) => {
+    e.stopPropagation();
+
+    const newStatus = event.eventStatus === "OPEN" ? "CLOSED" : "OPEN";
+
+    if (
+      !window.confirm(
+        `Are you sure you want to ${
+          newStatus === "OPEN" ? "open" : "close"
+        } bookings for this event?`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await api.updateEventStatus(event.id, newStatus, token);
+
+      showToast(
+        `Bookings ${newStatus === "OPEN" ? "opened" : "closed"} successfully!`
+      );
+
+      load();
+    } catch {
+      showToast("Failed to update event status", "error");
+    }
+  };
+
+
   if (selectedId) {
     return (
       <EventDetail
@@ -197,6 +226,17 @@ export default function Events({ token, showToast }) {
                       onClick={() => window.open(`/event/${event.id}`, "_blank")}
                     >
                       ↗ Preview
+                    </button>
+                    <button
+                      style={{
+                        ...S.btnSm(event.eventStatus === "OPEN" ? "warning" : "success"),
+                        flex: isPhone ? 1 : "none",
+                        justifyCenter: "center",
+                        ...(isClosed ? { opacity: 0.6, filter: "grayscale(100%)" } : null),
+                      }}
+                      onClick={(e) => toggleEventStatus(event, e)}
+                    >
+                      {event.eventStatus === "OPEN" ? "🔒 Close" : "🔓 Open"}
                     </button>
                     <button
                       style={{
