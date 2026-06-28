@@ -21,7 +21,32 @@ export default function Events({ token, showToast }) {
 
   const load = () => {
     setLoading(true);
-    api.getEvents(token).then((e) => { setEvents(e); setLoading(false); }).catch(() => setLoading(false));
+    api
+      .getEvents(token)
+      .then((e) => {
+        // Sort requirement:
+        // 1) Closed events at the bottom
+        // 2) Within each group, sort by event starting date (ascending)
+        const sorted = [...(e || [])].sort((a, b) => {
+          const aStatus = getEventStatus(a);
+          const bStatus = getEventStatus(b);
+
+          const aClosed = aStatus === "closed";
+          const bClosed = bStatus === "closed";
+
+          // closed => bottom
+          if (aClosed !== bClosed) return aClosed ? 1 : -1;
+
+          const aTime = a?.startDate ? new Date(a.startDate).getTime() : 0;
+          const bTime = b?.startDate ? new Date(b.startDate).getTime() : 0;
+
+          return aTime - bTime;
+        });
+
+        setEvents(sorted);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
   };
   useEffect(() => { load(); }, []);
 

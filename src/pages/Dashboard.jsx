@@ -79,7 +79,7 @@ export default function Dashboard({ token, setPage }) {
             </span>
           </div>
           {events
-            .filter((e) => ["active", "upcoming"].includes(getEventStatus(e)))
+            .filter((e) => getEventStatus(e) === "open")
             .slice(0, 4)
             .map((e) => {
               const booked = e.stalls?.filter((s) => s.stallStatus === "BOOKED").length || 0;
@@ -93,7 +93,8 @@ export default function Dashboard({ token, setPage }) {
                     <div style={{ fontSize: 12, color: "#888" }}>{formatDate(e.startDate)}</div>
                   </div>
                   <div style={{ textAlign: "right", flexShrink: 0 }}>
-                    <span style={{ ...S.badge(status === "active" ? "purple" : ""), fontSize: 10 }}>{status}</span>
+                    <span style={{ ...S.badge(status === "open" ? "purple" : ""), fontSize: 10 }}>{status}</span>
+
                     <div style={{ fontSize: 12, color: "#888", marginTop: 4 }}>
                       {booked}/{total} booked ({pct}%)
                     </div>
